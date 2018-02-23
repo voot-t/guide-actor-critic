@@ -29,9 +29,9 @@ if __name__ == '__main__':
     parser.add_argument("-nt", "--n_taylor", dest="n_taylor", default=1, type=int, help="Number of samples for Taylor approximation. 0=GAC-0, 1=GAC-1")
 
     parser.add_argument("-itest", "--itest", dest="iter_test", default=1000, type=float, help="Test iteration")
+    parser.add_argument("-save", "--save", dest="save_video", default=0, type=int, help="Flag for saving a video")
 
-    args = parser.parse_args()
-    seed = args.seed
+    # for referencing environment name
     env_dict = {-2 : "BipedalWalker-v2",
                 -1 : "LunarLanderContinuous-v2", 
                 0 : "Pendulum-v0",
@@ -46,8 +46,10 @@ if __name__ == '__main__':
                 9 : "Humanoid-v1",
                 10: "HumanoidStandup-v1",
     }
-    #env_idx     = args.env_idx
-    #env_name    = env_dict[env_idx]
+    
+    args = parser.parse_args()
+    seed = args.seed
+    
     env_name    = args.env_name
     T_max       = args.time_step
 
@@ -59,10 +61,10 @@ if __name__ == '__main__':
     n_taylor    = args.n_taylor
 
     iter_test       = args.iter_test
+    save_video       = args.save_video
 
     render = 1
     N_test = 10
-    save_video = False
 
 
     np.random.seed(seed)
@@ -79,9 +81,12 @@ if __name__ == '__main__':
             pathlib.Path("./Video/" + env_name).mkdir(parents=True, exist_ok=True) 
             video_relative_path = "./Video/" + env_name + "/"
 
-            # Change from N_test-1 to 0 to save video of every episodes
+            ## To save video of the first episode
             env_test = gym.wrappers.Monitor(env_test, video_relative_path, \
-                video_callable=lambda episode_id: episode_id%1==(N_test-1), force =True)
+                video_callable=lambda episode_id: episode_id == 0, force =True)
+            ## To save video of every episodes
+            #env_test = gym.wrappers.Monitor(env_test, video_relative_path, \
+            #    video_callable=lambda episode_id: episode_id%1==0, force =True)
         except:
             print("Cannot create video directories. Video will not be saved.")
             save_video = False
@@ -116,7 +121,7 @@ if __name__ == '__main__':
         for t_te in range(0, T_max):
             if render:
                 env_test.render()
-                time.sleep(0.01)    #to slowdown rendering
+                #time.sleep(0.01)    #to slowdown rendering
 
             action_te = learner.get_action(state_te)
             next_state_te, reward_te, done_te, info_te = env_test.step(np.clip(action_te, a_min=a_space_low, a_max=a_space_high))  
